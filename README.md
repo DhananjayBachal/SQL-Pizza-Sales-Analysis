@@ -1,172 +1,368 @@
-# 🍕 Pizza Sales Analysis – SQL Project
+# 🍕 Pizza Sales Analysis Using SQL
 
 ## 📌 Project Overview
 
-This project analyzes **pizza sales data using MySQL** to uncover valuable business insights such as total orders, revenue, popular pizza sizes, top-selling pizzas, category performance, hourly order trends, and revenue contribution.
+This project analyzes pizza sales data using **MySQL** to generate business insights from orders, pizza types, categories, sizes, quantities, and revenue.
 
-The project demonstrates practical SQL skills including **JOINs, GROUP BY, aggregate functions, subqueries, window functions, CTE-style analysis, ranking, and data aggregation**.
-
----
-
-## 🎯 Project Objectives
-
-* Analyze overall pizza sales performance
-* Calculate total orders and revenue
-* Identify the most popular pizza sizes and types
-* Find top-selling pizzas based on quantity and revenue
-* Analyze pizza category performance
-* Understand hourly order patterns
-* Calculate average pizzas ordered per day
-* Analyze revenue contribution by category
-* Track cumulative revenue over time
-* Identify top 3 pizzas within each category
+The project demonstrates practical SQL skills including **JOINs, aggregate functions, GROUP BY, subqueries, date/time functions, and window functions**.
 
 ---
 
 ## 🛠️ Technologies Used
 
-* **MySQL**
-* **SQL**
-* **MySQL Workbench**
-* **Git & GitHub**
+* MySQL
+* SQL
+* MySQL Workbench
+* GitHub
 
 ---
 
-## 🗂️ Database Structure
+# 📊 SQL Analysis
 
-The analysis uses the following tables:
+## 1. Total Number of Orders
 
-### `orders`
+**Business Question:**
+How many total orders were placed?
 
-| Column       | Description             |
-| ------------ | ----------------------- |
-| `order_id`   | Unique order identifier |
-| `order_date` | Date of the order       |
-| `order_time` | Time of the order       |
+### Query
 
-### `order_details`
-
-| Column             | Description                    |
-| ------------------ | ------------------------------ |
-| `order_details_id` | Unique order-detail identifier |
-| `order_id`         | Reference to the order         |
-| `pizza_id`         | Reference to the pizza         |
-| `quantity`         | Number of pizzas ordered       |
-
-### Additional Tables
-
-* `pizzas`
-* `pizza_types`
-
-These tables provide pizza pricing, size, category, and pizza type information.
-
----
-
-## 🔍 SQL Analysis Performed
-
-### 1. Total Number of Orders
-
-Calculated the total number of orders placed using `COUNT()`.
-
-### 2. Total Revenue
-
-Calculated total sales revenue using:
-
-`quantity × pizza price`
-
-and rounded the result using `ROUND()`.
-
-### 3. Highest-Priced Pizza
-
-Identified the pizza with the highest price using `ORDER BY` and `LIMIT`.
-
-### 4. Most Common Pizza Size
-
-Analyzed order details to determine the most frequently ordered pizza size.
-
-### 5. Top 5 Most Ordered Pizza Types
-
-Used `SUM()`, `GROUP BY`, and `ORDER BY` to identify the five pizza types with the highest quantities sold.
-
-### 6. Pizza Category Performance
-
-Analyzed the total quantity of pizzas ordered for each category.
-
-### 7. Orders by Hour
-
-Used the MySQL `HOUR()` function to determine the distribution of orders throughout the day.
-
-### 8. Category-Wise Pizza Distribution
-
-Analyzed the number of pizza types available in each category.
-
-### 9. Average Daily Pizza Orders
-
-Calculated the average number of pizzas ordered per day using a subquery and aggregation.
-
-### 10. Top 3 Pizzas by Revenue
-
-Identified the three pizza types generating the highest revenue.
-
-### 11. Revenue Contribution
-
-Calculated the percentage contribution of each pizza category to total revenue.
-
-### 12. Cumulative Revenue Analysis
-
-Used the SQL **window function `SUM() OVER()`** to calculate cumulative revenue over time.
-
-### 13. Top 3 Pizzas by Category
-
-Used the **`RANK()` window function** with `PARTITION BY` to identify the top three revenue-generating pizzas within each category.
-
----
-
-## 💡 Key SQL Concepts Demonstrated
-
-```text
-✓ SELECT
-✓ WHERE
-✓ COUNT()
-✓ SUM()
-✓ AVG()
-✓ ROUND()
-✓ GROUP BY
-✓ ORDER BY
-✓ LIMIT
-✓ INNER JOIN
-✓ Subqueries
-✓ Aggregate Functions
-✓ Window Functions
-✓ SUM() OVER()
-✓ RANK()
-✓ PARTITION BY
-✓ Date & Time Functions
-✓ Business KPI Analysis
+```sql
+SELECT 
+    COUNT(order_id) AS total_orders
+FROM orders;
 ```
 
 ---
 
-## 📊 Business Questions Answered
+## 2. Total Revenue Generated
 
-This project answers important business questions such as:
+**Business Question:**
+What is the total revenue generated from pizza sales?
 
-* How many orders were placed?
-* What is the total revenue generated?
-* Which pizza has the highest price?
-* What is the most popular pizza size?
-* Which pizzas are ordered the most?
-* Which pizza category has the highest demand?
-* What time of day receives the most orders?
-* What is the average number of pizzas ordered per day?
-* Which pizzas generate the most revenue?
-* What percentage of revenue comes from each category?
-* How does cumulative revenue grow over time?
-* Which are the top-performing pizzas within each category?
+### Query
+
+```sql
+SELECT 
+    ROUND(SUM(order_details.quantity * pizzas.price), 2) AS total_sales
+FROM order_details
+JOIN pizzas 
+    ON pizzas.pizza_id = order_details.pizza_id;
+```
 
 ---
 
-## 📁 Project Structure
+## 3. Highest-Priced Pizza
+
+**Business Question:**
+Which pizza has the highest price?
+
+### Query
+
+```sql
+SELECT 
+    pizza_types.name,
+    pizzas.price
+FROM pizza_types
+JOIN pizzas 
+    ON pizza_types.pizza_type_id = pizzas.pizza_type_id
+ORDER BY pizzas.price DESC
+LIMIT 1;
+```
+
+---
+
+## 4. Most Common Pizza Size
+
+**Business Question:**
+Which pizza size is ordered most frequently?
+
+### Query
+
+```sql
+SELECT 
+    pizzas.size,
+    COUNT(order_details.order_details_id) AS order_count
+FROM pizzas
+JOIN order_details 
+    ON pizzas.pizza_id = order_details.pizza_id
+GROUP BY pizzas.size
+ORDER BY order_count DESC;
+```
+
+---
+
+## 5. Top 5 Most Ordered Pizza Types
+
+**Business Question:**
+Which five pizza types have the highest quantity of pizzas sold?
+
+### Query
+
+```sql
+SELECT 
+    pizza_types.name,
+    SUM(order_details.quantity) AS quantity
+FROM pizza_types
+JOIN pizzas 
+    ON pizza_types.pizza_type_id = pizzas.pizza_type_id
+JOIN order_details 
+    ON order_details.pizza_id = pizzas.pizza_id
+GROUP BY pizza_types.name
+ORDER BY quantity DESC
+LIMIT 5;
+```
+
+---
+
+## 6. Total Quantity of Pizzas Ordered by Category
+
+**Business Question:**
+Which pizza category has the highest number of pizzas ordered?
+
+### Query
+
+```sql
+SELECT 
+    pizza_types.category,
+    SUM(order_details.quantity) AS quantity
+FROM pizza_types
+JOIN pizzas 
+    ON pizza_types.pizza_type_id = pizzas.pizza_type_id
+JOIN order_details 
+    ON order_details.pizza_id = pizzas.pizza_id
+GROUP BY pizza_types.category
+ORDER BY quantity DESC;
+```
+
+---
+
+## 7. Orders by Hour
+
+**Business Question:**
+At what time of the day are the most orders placed?
+
+### Query
+
+```sql
+SELECT 
+    HOUR(order_time) AS hour,
+    COUNT(order_id) AS order_count
+FROM orders
+GROUP BY HOUR(order_time)
+ORDER BY hour;
+```
+
+---
+
+## 8. Number of Pizza Types in Each Category
+
+**Business Question:**
+How many different pizza types are available in each category?
+
+### Query
+
+```sql
+SELECT 
+    category,
+    COUNT(name) AS pizza_count
+FROM pizza_types
+GROUP BY category;
+```
+
+---
+
+## 9. Average Number of Pizzas Ordered Per Day
+
+**Business Question:**
+What is the average number of pizzas ordered per day?
+
+### Query
+
+```sql
+SELECT 
+    ROUND(AVG(quantity), 0) AS avg_pizza_ordered_per_day
+FROM
+(
+    SELECT 
+        orders.order_date,
+        SUM(order_details.quantity) AS quantity
+    FROM orders
+    JOIN order_details 
+        ON orders.order_id = order_details.order_id
+    GROUP BY orders.order_date
+) AS order_quantity;
+```
+
+---
+
+## 10. Top 3 Pizza Types by Revenue
+
+**Business Question:**
+Which three pizza types generate the highest revenue?
+
+### Query
+
+```sql
+SELECT 
+    pizza_types.name,
+    SUM(order_details.quantity * pizzas.price) AS revenue
+FROM pizza_types
+JOIN pizzas 
+    ON pizzas.pizza_type_id = pizza_types.pizza_type_id
+JOIN order_details 
+    ON order_details.pizza_id = pizzas.pizza_id
+GROUP BY pizza_types.name
+ORDER BY revenue DESC
+LIMIT 3;
+```
+
+---
+
+## 11. Revenue Contribution by Pizza Category
+
+**Business Question:**
+What percentage of total revenue is generated by each pizza category?
+
+### Query
+
+```sql
+SELECT 
+    pizza_types.category,
+    ROUND(
+        (
+            SUM(order_details.quantity * pizzas.price) /
+            (
+                SELECT 
+                    SUM(order_details.quantity * pizzas.price)
+                FROM order_details
+                JOIN pizzas 
+                    ON pizzas.pizza_id = order_details.pizza_id
+            )
+        ) * 100,
+        2
+    ) AS revenue_percentage
+FROM pizza_types
+JOIN pizzas 
+    ON pizza_types.pizza_type_id = pizzas.pizza_type_id
+JOIN order_details 
+    ON order_details.pizza_id = pizzas.pizza_id
+GROUP BY pizza_types.category
+ORDER BY revenue_percentage DESC;
+```
+
+---
+
+## 12. Cumulative Revenue Over Time
+
+**Business Question:**
+How does revenue accumulate over time?
+
+### Query
+
+```sql
+SELECT 
+    order_date,
+    SUM(revenue) OVER(
+        ORDER BY order_date
+    ) AS cumulative_revenue
+FROM
+(
+    SELECT 
+        orders.order_date,
+        SUM(order_details.quantity * pizzas.price) AS revenue
+    FROM order_details
+    JOIN pizzas
+        ON order_details.pizza_id = pizzas.pizza_id
+    JOIN orders
+        ON orders.order_id = order_details.order_id
+    GROUP BY orders.order_date
+) AS sales;
+```
+
+---
+
+## 13. Top 3 Pizzas by Revenue Within Each Category
+
+**Business Question:**
+What are the top three revenue-generating pizzas in each category?
+
+### Query
+
+```sql
+SELECT 
+    category,
+    name,
+    revenue
+FROM
+(
+    SELECT 
+        category,
+        name,
+        revenue,
+        RANK() OVER(
+            PARTITION BY category 
+            ORDER BY revenue DESC
+        ) AS ranking
+    FROM
+    (
+        SELECT 
+            pizza_types.category,
+            pizza_types.name,
+            SUM(
+                order_details.quantity * pizzas.price
+            ) AS revenue
+        FROM pizza_types
+        JOIN pizzas
+            ON pizza_types.pizza_type_id = pizzas.pizza_type_id
+        JOIN order_details
+            ON order_details.pizza_id = pizzas.pizza_id
+        GROUP BY 
+            pizza_types.category,
+            pizza_types.name
+    ) AS pizza_revenue
+) AS ranked_pizzas
+WHERE ranking <= 3;
+```
+
+---
+
+# 🧠 SQL Concepts Demonstrated
+
+| SQL Concept    | Usage                            |
+| -------------- | -------------------------------- |
+| `SELECT`       | Retrieve data                    |
+| `COUNT()`      | Count orders and records         |
+| `SUM()`        | Calculate quantities and revenue |
+| `AVG()`        | Calculate average daily sales    |
+| `ROUND()`      | Format numerical results         |
+| `GROUP BY`     | Group sales data                 |
+| `ORDER BY`     | Sort results                     |
+| `LIMIT`        | Return top results               |
+| `JOIN`         | Combine multiple tables          |
+| Subqueries     | Perform advanced calculations    |
+| `HOUR()`       | Analyze hourly orders            |
+| `RANK()`       | Rank pizzas                      |
+| `PARTITION BY` | Rank within categories           |
+| `SUM() OVER()` | Calculate cumulative revenue     |
+
+---
+
+# 📈 Business Insights
+
+The analysis helps answer important business questions:
+
+* What is the overall sales performance?
+* Which pizzas are most popular?
+* Which pizza categories generate the most revenue?
+* What pizza sizes are most frequently ordered?
+* What are the peak ordering hours?
+* Which pizzas generate the highest revenue?
+* How much revenue does each category contribute?
+* Which pizzas perform best within each category?
+
+---
+
+# 📁 Project Structure
 
 ```text
 Pizza-Sales-Analysis/
@@ -177,7 +373,7 @@ Pizza-Sales-Analysis/
 
 ---
 
-## 🚀 How to Run the Project
+# 🚀 How to Run
 
 ### 1. Clone the Repository
 
@@ -187,62 +383,32 @@ git clone https://github.com/DhananjayBachal
 
 ### 2. Open MySQL Workbench
 
-Open the SQL file in **MySQL Workbench**.
+Open the `Pizza Sales Analysis.sql` file.
 
-### 3. Create the Database
+### 3. Select Your Database
 
 ```sql
-CREATE DATABASE pizzahut;
 USE pizzahut;
 ```
 
-### 4. Load the Required Dataset
+### 4. Execute the Queries
 
-Import the required pizza sales tables:
-
-```text
-orders
-order_details
-pizzas
-pizza_types
-```
-
-### 5. Execute the Queries
-
-Run the SQL queries provided in the project file to reproduce the analysis.
+Run each query individually to reproduce the analysis.
 
 ---
 
-## 📈 Skills Demonstrated
-
-This project demonstrates my ability to:
-
-* Write efficient SQL queries
-* Perform relational database analysis
-* Combine multiple tables using JOINs
-* Analyze sales and revenue KPIs
-* Perform aggregation and grouping
-* Use subqueries for advanced analysis
-* Apply SQL window functions
-* Rank business performance metrics
-* Extract actionable business insights from data
-
----
-
-## 👨‍💻 Author
+# 👨‍💻 Author
 
 **Dhananjay Bachal**
 
-🎓 Data Analytics Enthusiast
-💻 SQL | Python | Excel | Data Analytics
+**GitHub:**
+https://github.com/DhananjayBachal
 
-### Connect With Me
-
-* GitHub: https://github.com/DhananjayBachal
-* LinkedIn: https://www.linkedin.com/in/dhananjay-bachal/
+**LinkedIn:**
+https://www.linkedin.com/in/dhananjay-bachal/
 
 ---
 
-## ⭐ If You Find This Project Useful
+## ⭐ Project Highlights
 
-Feel free to **star ⭐ the repository** and explore my other data analytics projects.
+> A practical SQL data analytics project demonstrating relational data analysis, sales KPIs, revenue analysis, JOINs, subqueries, and advanced SQL window functions.
